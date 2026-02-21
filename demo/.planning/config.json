@@ -1,0 +1,10 @@
+{
+  "mode": "milestone",
+  "depth": "comprehensive",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "quality",
+  "workflow": { "research": true, "plan_check": true, "verifier": true },
+  "git": { "branching_strategy": "milestone-branches" },
+  "created": "2026-01-15"
+}
