@@ -57,11 +57,8 @@ A local web dashboard for visualizing [GSD (Get Shit Done)](https://github.com/d
 **Prerequisites:** [Bun](https://bun.sh) runtime
 
 ```bash
-# Run directly (no install needed)
-bunx gsd-ui
-
-# Or install globally
-bun install -g gsd-ui
+# Install globally from GitHub
+bun install -g github:Stolkmeister/gsd-ui
 gsd-ui
 ```
 
