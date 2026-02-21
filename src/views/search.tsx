@@ -36,18 +36,21 @@ const typeLabels: Record<string, string> = {
   document: 'Document',
 }
 
+function parsePhaseNum(phase: string): string {
+  const match = phase.match(/^(\d+(?:\.\d+)?)/)
+  return match ? String(Number(match[1])) : phase
+}
+
 function getResultUrl(entry: SearchEntry): string {
   if (entry.type === 'milestone' && entry.milestone) return `/milestone/${encodeURIComponent(entry.milestone)}`
   if (entry.type === 'plan' && entry.phase) {
     const planMatch = entry.title.match(/Plan (\d+)/)
     if (planMatch) {
-      const phaseNum = entry.phase.match(/^(\d+(?:\.\d+)?)/)?.[1] ?? entry.phase
-      return `/plan/${phaseNum}/${planMatch[1]}`
+      return `/plan/${parsePhaseNum(entry.phase)}/${planMatch[1]}`
     }
   }
   if ((entry.type === 'summary' || entry.type === 'verification') && entry.phase) {
-    const phaseNum = entry.phase.match(/^(\d+(?:\.\d+)?)/)?.[1] ?? entry.phase
-    return `/phase/${phaseNum}`
+    return `/phase/${parsePhaseNum(entry.phase)}`
   }
   if (entry.type === 'todo') return '/todos'
   if (entry.type === 'requirement') return '/'

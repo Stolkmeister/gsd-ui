@@ -75,8 +75,17 @@ export function handleGetState(state: GsdState): Response {
  */
 export function handleSearch(
   state: GsdState,
-  url: URL
+  url: URL,
 ): Response {
+  const planningBase = state.planningPath
+  const relativize = (absPath: string): string => {
+    if (!absPath) return absPath
+    try {
+      return relative(resolve(planningBase, ".."), absPath)
+    } catch {
+      return absPath
+    }
+  }
   const query = url.searchParams.get("q")?.toLowerCase().trim()
   if (!query) {
     return Response.json({ results: [], query: "" })
@@ -134,9 +143,10 @@ export function handleSearch(
     return a.entry.title.localeCompare(b.entry.title)
   })
 
-  // Return top 50 results
+  // Return top 50 results with sanitized paths
   const results = scored.slice(0, 50).map((s) => ({
     ...s.entry,
+    path: relativize(s.entry.path),
     score: s.score,
   }))
 
