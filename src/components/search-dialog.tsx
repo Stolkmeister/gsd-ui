@@ -52,7 +52,7 @@ function getResultHref(entry: SearchEntry): string {
   }
   if (entry.type === 'todo') return '/todos'
   if (entry.type === 'requirement') return '/'
-  if (entry.type === 'research') return `/document/${encodeURIComponent(entry.path)}`
+  if (entry.type === 'research') return `/document/${entry.path}`
   return '/'
 }
 
