@@ -16,6 +16,7 @@
     "build": "vite build",
     "server": "bun run server/index.ts",
     "start": "bun run build && bun run server/index.ts",
+    "postinstall": "bun run build",
     "prepublishOnly": "bun run build"
   },
   "keywords": [
