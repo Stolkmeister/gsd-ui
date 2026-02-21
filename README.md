@@ -57,28 +57,46 @@ A local web dashboard for visualizing [GSD (Get Shit Done)](https://github.com/d
 **Prerequisites:** [Bun](https://bun.sh) runtime
 
 ```bash
-# Clone and install
-git clone https://github.com/daanstolk/gsd-ui.git
-cd gsd-ui
-bun install
+# Run directly (no install needed)
+bunx gsd-ui
 
-# Build the frontend
-bun run build
+# Or install globally
+bun install -g gsd-ui
+gsd-ui
+```
 
-# Start the server (auto-detects .planning/ in current directory)
-bun run server
+Run from any directory containing a `.planning/` folder — it auto-discovers it. Or point to a specific project:
 
-# Or point to a specific project
-bun run server/index.ts /path/to/your/project
+```bash
+gsd-ui /path/to/your/project
+gsd-ui --port 3000
 ```
 
 Open **http://localhost:4567** in your browser.
 
+### CLI Options
+
+```
+Usage:
+  gsd-ui [options] [path]
+
+Options:
+  -h, --help       Show this help message
+  -v, --version    Show version number
+  -p, --port NUM   Port to listen on (default: 4567, or PORT env)
+```
+
+If multiple `.planning/` directories are found (cwd + one level of subdirectories), an interactive picker lets you choose which one to open.
+
 ### Development
 
 ```bash
+git clone https://github.com/daanstolk/gsd-ui.git
+cd gsd-ui
+bun install
+
 # Terminal 1: Start the backend server
-bun run server/index.ts /path/to/your/project
+bun cli.ts /path/to/your/project
 
 # Terminal 2: Start Vite dev server (with HMR)
 bun run dev
@@ -92,7 +110,7 @@ The repo includes a demo `.planning/` directory with sample data:
 
 ```bash
 bun run build
-bun run server/index.ts demo
+bun cli.ts demo
 ```
 
 ## How It Works
