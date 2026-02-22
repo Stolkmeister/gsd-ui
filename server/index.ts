@@ -1,9 +1,44 @@
 import { resolve, join } from "node:path"
+import { connect } from "node:net"
 import type { ServerWebSocket } from "bun"
 import type { GsdState } from "./types.ts"
 import { buildInitialState, updateStateForFile } from "./state.ts"
 import { handleGetState, handleSearch, handleGetDocument, sanitizeStateForWs } from "./api.ts"
 import { createWatcher } from "./watcher.ts"
+
+function isPortInUse(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = connect(port, "127.0.0.1")
+    socket.once("connect", () => {
+      socket.destroy()
+      resolve(true)
+    })
+    socket.once("error", () => {
+      socket.destroy()
+      resolve(false)
+    })
+  })
+}
+
+async function findAvailablePort(preferred: number, explicit: boolean): Promise<number> {
+  if (!(await isPortInUse(preferred))) return preferred
+
+  if (explicit) {
+    console.error(`[gsd-ui] Port ${preferred} is already in use.`)
+    process.exit(1)
+  }
+
+  for (let offset = 1; offset <= 10; offset++) {
+    const candidate = preferred + offset
+    if (!(await isPortInUse(candidate))) {
+      console.log(`[gsd-ui] Port ${preferred} is in use, using ${candidate} instead`)
+      return candidate
+    }
+  }
+
+  console.error(`[gsd-ui] Ports ${preferred}-${preferred + 10} are all in use.`)
+  process.exit(1)
+}
 
 export async function startServer(planningPath: string, port: number, portExplicit = false) {
   console.log(`[gsd-ui] Loading .planning/ from: ${planningPath}`)
@@ -111,36 +146,12 @@ export async function startServer(planningPath: string, port: number, portExplic
     },
   }
 
-  let server: ReturnType<typeof Bun.serve>
-  let actualPort = port
-  const maxRetries = portExplicit ? 0 : 10
+  port = await findAvailablePort(port, portExplicit)
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      server = Bun.serve({ ...serverOptions, port: actualPort })
-      break
-    } catch (err: any) {
-      if (err?.code === "EADDRINUSE" || err?.message?.includes("address already in use")) {
-        if (attempt === maxRetries) {
-          if (portExplicit) {
-            console.error(`[gsd-ui] Port ${port} is already in use.`)
-          } else {
-            console.error(`[gsd-ui] Ports ${port}-${port + maxRetries} are all in use.`)
-          }
-          process.exit(1)
-        }
-        actualPort = port + attempt + 1
-        continue
-      }
-      throw err
-    }
-  }
+  const server = Bun.serve({ ...serverOptions, port })
 
-  if (actualPort !== port) {
-    console.log(`[gsd-ui] Port ${port} is in use, using ${actualPort} instead`)
-  }
   console.log(
-    `[gsd-ui] Server running at http://localhost:${server!.port}`
+    `[gsd-ui] Server running at http://localhost:${server.port}`
   )
   console.log(`[gsd-ui] Watching for changes in: ${planningPath}`)
 
