@@ -79,7 +79,7 @@ async function runUpdate() {
 // ---- Parse args ----
 
 let port = parseInt(process.env.PORT || "") || 4567
-let portExplicit = !!process.env.PORT
+let portExplicit = false
 let explicitPath: string | undefined
 
 const args = process.argv.slice(2)
