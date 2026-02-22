@@ -1,6 +1,9 @@
 import { NavLink } from 'react-router'
 import {
+  Home,
   Map,
+  ClipboardList,
+  BookOpen,
   CheckSquare,
   Search,
   Scale,
@@ -9,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useLiveState } from '@/hooks/use-live-state'
 
@@ -18,7 +22,10 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: '/', icon: Map, label: 'Roadmap' },
+  { to: '/', icon: Home, label: 'Project' },
+  { to: '/roadmap', icon: Map, label: 'Roadmap' },
+  { to: '/requirements', icon: ClipboardList, label: 'Requirements' },
+  { to: '/research', icon: BookOpen, label: 'Research' },
   { to: '/todos', icon: CheckSquare, label: 'Todos' },
   { to: '/search', icon: Search, label: 'Search' },
   { to: '/decisions', icon: Scale, label: 'Decisions' },
@@ -84,6 +91,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <div>Phase {state.state.currentPhase} / {state.state.totalPhases}</div>
               <div className="mt-1 truncate">{state.state.status}</div>
             </div>
+            {state?.config?.model_profile && (
+              <div className="mt-2">
+                <Badge variant="secondary" className="text-xs">
+                  {state.config.model_profile}
+                </Badge>
+              </div>
+            )}
           </div>
         </>
       )}
