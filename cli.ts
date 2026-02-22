@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 
-import { resolve, join, basename } from "node:path"
+import { resolve, join } from "node:path"
 import { readdir, stat } from "node:fs/promises"
 import { createInterface } from "node:readline"
 import { startServer } from "./server/index.ts"
 
 const VERSION = "0.1.0"
+const REPO = "Stolkmeister/gsd-ui"
 
 const HELP = `
 gsd-ui v${VERSION} — GSD project dashboard
@@ -17,6 +18,7 @@ Options:
   -h, --help       Show this help message
   -v, --version    Show version number
   -p, --port NUM   Port to listen on (default: 4567, or PORT env)
+  -u, --update     Update gsd-ui to the latest version
 
 Arguments:
   path             Path to project or .planning/ directory.
@@ -27,7 +29,52 @@ Examples:
   gsd-ui ./my-project        # use my-project/.planning/
   gsd-ui .planning            # use .planning/ directly
   gsd-ui --port 3000         # custom port
+  gsd-ui --update            # update to latest version
 `.trim()
+
+// ---- Update check ----
+
+async function getRemoteVersion(): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${REPO}/main/package.json`,
+      { signal: AbortSignal.timeout(3000) }
+    )
+    if (!res.ok) return null
+    const pkg = await res.json() as { version?: string }
+    return pkg.version ?? null
+  } catch {
+    return null
+  }
+}
+
+function checkForUpdateInBackground() {
+  getRemoteVersion().then((remote) => {
+    if (remote && remote !== VERSION) {
+      console.log(
+        `\n[gsd-ui] Update available: v${VERSION} → v${remote}` +
+          `\n[gsd-ui] Run: gsd-ui --update\n`
+      )
+    }
+  })
+}
+
+async function runUpdate() {
+  console.log("[gsd-ui] Updating...")
+  const proc = Bun.spawn(
+    ["bun", "install", "-g", `github:${REPO}`],
+    { stdout: "inherit", stderr: "inherit" }
+  )
+  const code = await proc.exited
+  if (code === 0) {
+    // Check what version we got
+    const remote = await getRemoteVersion()
+    console.log(`[gsd-ui] Updated to v${remote ?? "latest"}`)
+  } else {
+    console.error("[gsd-ui] Update failed")
+    process.exit(1)
+  }
+}
 
 // ---- Parse args ----
 
@@ -44,6 +91,10 @@ for (let i = 0; i < args.length; i++) {
   }
   if (arg === "-v" || arg === "--version") {
     console.log(VERSION)
+    process.exit(0)
+  }
+  if (arg === "-u" || arg === "--update") {
+    await runUpdate()
     process.exit(0)
   }
   if (arg === "-p" || arg === "--port") {
@@ -155,6 +206,9 @@ async function promptSelection(dirs: string[]): Promise<string> {
 }
 
 // ---- Main ----
+
+// Check for updates in the background (non-blocking)
+checkForUpdateInBackground()
 
 let planningPath: string
 
