@@ -279,7 +279,7 @@ export function PlanView() {
         </div>
 
         {/* Right: Tabbed Content */}
-        <div>
+        <div className="min-w-0">
           <Tabs defaultValue={plan.objective ? 'objective' : plan.tasks ? 'tasks' : 'summary'}>
             <TabsList>
               {plan.objective && <TabsTrigger value="objective">Objective</TabsTrigger>}

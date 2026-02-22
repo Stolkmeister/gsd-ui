@@ -31,7 +31,7 @@ function stripXmlTags(content: string): string {
 export function Markdown({ content, className }: MarkdownProps) {
   const cleaned = stripXmlTags(content)
   return (
-    <div className={cn('prose-dark min-w-0 overflow-hidden', className)}>
+    <div className={cn('prose-dark min-w-0 overflow-hidden break-words', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
