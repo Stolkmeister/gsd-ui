@@ -7,9 +7,31 @@ interface MarkdownProps {
   className?: string
 }
 
+// Strip GSD XML tags (e.g. <action>, </verify>, <task type="auto">) but keep their text content.
+// Preserve tags inside fenced code blocks.
+function stripXmlTags(content: string): string {
+  const lines = content.split('\n')
+  let inCodeBlock = false
+  const result: string[] = []
+
+  for (const line of lines) {
+    if (line.trimStart().startsWith('```')) {
+      inCodeBlock = !inCodeBlock
+    }
+    if (inCodeBlock) {
+      result.push(line)
+    } else {
+      result.push(line.replace(/<\/?[a-z][a-z0-9-]*(?:\s[^>]*)?\s*>/gi, ''))
+    }
+  }
+
+  return result.join('\n')
+}
+
 export function Markdown({ content, className }: MarkdownProps) {
+  const cleaned = stripXmlTags(content)
   return (
-    <div className={cn('prose-dark', className)}>
+    <div className={cn('prose-dark min-w-0 overflow-hidden', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -142,7 +164,7 @@ export function Markdown({ content, className }: MarkdownProps) {
           ),
         }}
       >
-        {content}
+        {cleaned}
       </ReactMarkdown>
     </div>
   )
