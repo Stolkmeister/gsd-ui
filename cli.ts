@@ -32,6 +32,7 @@ Examples:
 // ---- Parse args ----
 
 let port = parseInt(process.env.PORT || "") || 4567
+let portExplicit = !!process.env.PORT
 let explicitPath: string | undefined
 
 const args = process.argv.slice(2)
@@ -52,6 +53,7 @@ for (let i = 0; i < args.length; i++) {
       process.exit(1)
     }
     port = parseInt(next)
+    portExplicit = true
     continue
   }
   // Treat as path argument
@@ -177,4 +179,4 @@ if (explicitPath) {
   }
 }
 
-await startServer(planningPath, port)
+await startServer(planningPath, port, portExplicit)

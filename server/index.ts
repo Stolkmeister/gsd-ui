@@ -1,11 +1,45 @@
 import { resolve, join } from "node:path"
+import { createServer } from "node:net"
 import type { ServerWebSocket } from "bun"
 import type { GsdState } from "./types.ts"
 import { buildInitialState, updateStateForFile } from "./state.ts"
 import { handleGetState, handleSearch, handleGetDocument, sanitizeStateForWs } from "./api.ts"
 import { createWatcher } from "./watcher.ts"
 
-export async function startServer(planningPath: string, port: number) {
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = createServer()
+    server.once("error", () => resolve(false))
+    server.once("listening", () => {
+      server.close(() => resolve(true))
+    })
+    server.listen(port, "127.0.0.1")
+  })
+}
+
+async function findAvailablePort(preferred: number, explicit: boolean): Promise<number> {
+  if (await isPortAvailable(preferred)) return preferred
+
+  if (explicit) {
+    console.error(`[gsd-ui] Port ${preferred} is already in use.`)
+    process.exit(1)
+  }
+
+  // Try up to 10 consecutive ports
+  for (let offset = 1; offset <= 10; offset++) {
+    const candidate = preferred + offset
+    if (await isPortAvailable(candidate)) {
+      console.log(`[gsd-ui] Port ${preferred} is in use, using ${candidate} instead`)
+      return candidate
+    }
+  }
+
+  console.error(`[gsd-ui] Ports ${preferred}-${preferred + 10} are all in use.`)
+  process.exit(1)
+}
+
+export async function startServer(planningPath: string, port: number, portExplicit = false) {
+  port = await findAvailablePort(port, portExplicit)
   console.log(`[gsd-ui] Loading .planning/ from: ${planningPath}`)
 
   // Build initial state
